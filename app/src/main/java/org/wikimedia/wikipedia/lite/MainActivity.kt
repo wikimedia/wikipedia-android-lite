@@ -18,6 +18,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         webView.loadUrl("http://192.168.1.26:6927/en.wikipedia.org/v1/page/mobile-html-shell/")
+        webView.settings.javaScriptEnabled = true
         webView.webViewClient = client
         loadButton.setOnClickListener {
             var js = "pagelib.c1.Page.load('http://192.168.1.26:6927/en.wikipedia.org/v1/page/mobile-html/${titleEditText.text}');"
