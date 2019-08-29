@@ -12,6 +12,8 @@ import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONException
 import org.json.JSONObject
 
+var ip = "192.168.1.26"
+
 class Client: WebViewClient() {
     var incomingMessageHandler: ValueCallback<String>? = null
     override fun onPageFinished(view: WebView?, url: String?) {
@@ -59,7 +61,7 @@ class Client: WebViewClient() {
     }
 
     fun fullyLoadTitle(title: String, webView: WebView) {
-        webView.loadUrl("http://192.168.1.26:6927/en.wikipedia.org/v1/page/mobile-html/${title}")
+        webView.loadUrl("https://en.wikipedia.org/api/rest_v1/page/mobile-html/${title}")
     }
 
     @JavascriptInterface
@@ -76,8 +78,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        startTime = System.currentTimeMillis()
-        webView.loadUrl("http://192.168.1.26:6927/en.wikipedia.org/v1/page/mobile-html-shell/")
         webView.settings.javaScriptEnabled = true
         client.incomingMessageHandler = ValueCallback<String> {
             try {
@@ -92,13 +92,26 @@ class MainActivity : AppCompatActivity() {
         webView.webViewClient = client
         webView.addJavascriptInterface(client, "marshaller")
         loadButton.setOnClickListener {
-            startTime = System.currentTimeMillis()
-            client.loadTitle(titleEditText.text.toString(), webView)
+            if (!webView.url.contains(ip)) {
+                timeTextView.text = "load shell first"
+            } else {
+                startTime = System.currentTimeMillis()
+                client.loadTitle(titleEditText.text.toString(), webView)
+            }
+
         }
         fullLoadButton.setOnClickListener {
             startTime = System.currentTimeMillis()
             client.fullyLoadTitle(titleEditText.text.toString(), webView)
         }
+        shellButton.setOnClickListener {
+            loadShell()
+        }
+        loadShell()
+    }
+    fun loadShell() {
+        startTime = System.currentTimeMillis()
+        webView.loadUrl("http://${ip}:6927/en.wikipedia.org/v1/page/mobile-html-shell/")
     }
 
 }

@@ -14,7 +14,7 @@
 
         <EditText
             android:id="@+id/titleEditText"
-            android:layout_width="wrap_content"
+            android:layout_width="162dp"
             android:layout_height="wrap_content"
             android:ems="10"
             android:inputType="textPersonName"
@@ -31,7 +31,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Full Load" />
+            android:text="Full" />
+
+        <Button
+            android:id="@+id/shellButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Shell" />
 
     </LinearLayout>
 
