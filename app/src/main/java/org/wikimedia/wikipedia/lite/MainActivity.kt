@@ -45,6 +45,10 @@ class Client: WebViewClient() {
             })
     }
 
+    fun fullyLoadTitle(title: String, webView: WebView) {
+        webView.loadUrl("http://192.168.1.26:6927/en.wikipedia.org/v1/page/mobile-html/${title}")
+    }
+
     @JavascriptInterface
     fun onReceiveMessage(message: String) {
         incomingMessageHandler?.onReceiveValue(message)
@@ -59,18 +63,15 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        startTime = System.currentTimeMillis()
         webView.loadUrl("http://192.168.1.26:6927/en.wikipedia.org/v1/page/mobile-html-shell/")
         webView.settings.javaScriptEnabled = true
         client.incomingMessageHandler = ValueCallback<String> {
             try {
                 val messagePack = JSONObject(it)
                 var action = messagePack.get("action")
-                if (action == "setup_complete") {
-
-                } else if (action == "load_complete") {
-                    endTime = System.currentTimeMillis()
-                    timeTextView.text = "${endTime - startTime}"
-                }
+                endTime = System.currentTimeMillis()
+                timeTextView.text = "${endTime - startTime}"
             } catch (e: JSONException) {
                 throw RuntimeException(e)
             }
@@ -80,6 +81,10 @@ class MainActivity : AppCompatActivity() {
         loadButton.setOnClickListener {
             startTime = System.currentTimeMillis()
             client.loadTitle(titleEditText.text.toString(), webView)
+        }
+        fullLoadButton.setOnClickListener {
+            startTime = System.currentTimeMillis()
+            client.fullyLoadTitle(titleEditText.text.toString(), webView)
         }
     }
 
