@@ -26,7 +26,7 @@ class Client: WebViewClient() {
                 "textSizeAdjustmentPercentage: '100%%'," +
                 "loadImages: true" +
                 "}," +
-                "() => { marshaller.onReceiveMessage('{\"action\": \"setup_complete\"}') }" +
+                "() => { marshaller.onReceiveMessage('{\"action\": \"load_complete\"}') }" +
                 ")",
             ValueCallback<String> {
 
@@ -38,7 +38,20 @@ class Client: WebViewClient() {
     }
 
     fun loadTitle(title: String, webView: WebView) {
-        var js = "pagelib.c1.Page.load('https://en.wikipedia.org/api/rest_v1/page/mobile-html/${title}').then(() => { marshaller.onReceiveMessage('{\"action\": \"load_complete\"}') } )"
+        var js = "pagelib.c1.Page.load('https://en.wikipedia.org/api/rest_v1/page/mobile-html/${title}').then(() => { " +
+                "pagelib.c1.Page.setup({" +
+                "platform: pagelib.c1.Platforms.ANDROID," +
+                "clientVersion: '0.0.0'," +
+                "theme: pagelib.c1.Themes.DARK," +
+                "dimImages: false," +
+                "margins: { top: '16px', right: '16px', bottom: '16px', left: '16px' }," +
+                "areTablesInitiallyExpanded: false," +
+                "textSizeAdjustmentPercentage: '100%%'," +
+                "loadImages: true" +
+                "}," +
+                "() => { marshaller.onReceiveMessage('{\"action\": \"load_complete\"}') }" +
+                ")" +
+                "} )"
         webView.evaluateJavascript(js,
             ValueCallback<String> {
 
