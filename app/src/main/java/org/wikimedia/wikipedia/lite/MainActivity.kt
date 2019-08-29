@@ -1,5 +1,6 @@
 package org.wikimedia.wikipedia.lite
 
+import android.graphics.Bitmap
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Message
@@ -8,6 +9,8 @@ import android.webkit.ValueCallback
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import kotlinx.android.synthetic.main.activity_main.*
+import org.json.JSONException
+import org.json.JSONObject
 
 class Client: WebViewClient() {
     var incomingMessageHandler: ValueCallback<String>? = null
