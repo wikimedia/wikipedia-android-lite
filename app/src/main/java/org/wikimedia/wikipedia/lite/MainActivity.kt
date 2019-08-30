@@ -15,7 +15,7 @@ import org.json.JSONObject
 
 val shellPageHost = "talk-pages.wmflabs.org"
 val shellPagePath = "mobile-html-shell"
-val loadCompletion = "() => { marshaller.onReceiveMessage('{\"action\": \"load_complete\"}'); }"
+val loadCompletion = "() => { setTimeout(() => { marshaller.onReceiveMessage('{\"action\": \"load_complete\"}'); }, 1) }"
 val setupParams = "{platform: pagelib.c1.Platforms.ANDROID, theme: pagelib.c1.Themes.DARK, dimImages: false, margins: { top: '16px', right: '16px', bottom: '16px', left: '16px' }, areTablesInitiallyExpanded: false}"
 
 class Client: WebViewClient() {
