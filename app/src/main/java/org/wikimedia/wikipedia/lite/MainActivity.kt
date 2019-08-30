@@ -69,6 +69,7 @@ class MainActivity : AppCompatActivity() {
     var loadFirstSection: Boolean = false
 
     fun startTimer() {
+        timeTextView.text = ""
         startTime = System.currentTimeMillis()
     }
 
