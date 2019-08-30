@@ -12,7 +12,8 @@ import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONException
 import org.json.JSONObject
 
-var ip = "192.168.1.26"
+var shellPageHost = "talk-pages.wmflabs.org"
+var shellPagePath = "mobile-html-shell"
 
 class Client: WebViewClient() {
     var incomingMessageHandler: ValueCallback<String>? = null
@@ -75,33 +76,41 @@ class MainActivity : AppCompatActivity() {
     var startTime: Long = 0
     var endTime: Long = 0
 
+    fun startTimer() {
+        startTime = System.currentTimeMillis()
+    }
+
+    fun endTimer() {
+        endTime = System.currentTimeMillis()
+        timeTextView.text = "${endTime - startTime}"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         webView.settings.javaScriptEnabled = true
         client.incomingMessageHandler = ValueCallback<String> {
-            try {
-                val messagePack = JSONObject(it)
-                var action = messagePack.get("action")
-                endTime = System.currentTimeMillis()
-                timeTextView.text = "${endTime - startTime}"
-            } catch (e: JSONException) {
-                throw RuntimeException(e)
-            }
+            endTimer()
+//            try {
+//                val messagePack = JSONObject(it)
+//                var action = messagePack.get("action")
+//            } catch (e: JSONException) {
+//                throw RuntimeException(e)
+//            }
         }
         webView.webViewClient = client
         webView.addJavascriptInterface(client, "marshaller")
         loadButton.setOnClickListener {
-            if (!webView.url.contains(ip)) {
+            if (!webView.url.contains(shellPagePath)) {
                 timeTextView.text = "load shell first"
             } else {
-                startTime = System.currentTimeMillis()
+                startTimer()
                 client.loadTitle(titleEditText.text.toString(), webView)
             }
 
         }
         fullLoadButton.setOnClickListener {
-            startTime = System.currentTimeMillis()
+            startTimer()
             client.fullyLoadTitle(titleEditText.text.toString(), webView)
         }
         shellButton.setOnClickListener {
@@ -110,8 +119,8 @@ class MainActivity : AppCompatActivity() {
         loadShell()
     }
     fun loadShell() {
-        startTime = System.currentTimeMillis()
-        webView.loadUrl("http://${ip}:6927/en.wikipedia.org/v1/page/mobile-html-shell/")
+        startTimer()
+        webView.loadUrl("https://${shellPageHost}/en.wikipedia.org/v1/page/${shellPagePath}")
     }
 
 }
