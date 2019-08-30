@@ -13,10 +13,10 @@ import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONException
 import org.json.JSONObject
 
-var shellPageHost = "talk-pages.wmflabs.org"
-var shellPagePath = "mobile-html-shell"
-var loadCompletion = "() => { marshaller.onReceiveMessage('{\"action\": \"load_complete\"}'); }"
-var setupParams = "{platform: pagelib.c1.Platforms.ANDROID, theme: pagelib.c1.Themes.DARK, dimImages: false, margins: { top: '16px', right: '16px', bottom: '16px', left: '16px' }, areTablesInitiallyExpanded: false}"
+val shellPageHost = "talk-pages.wmflabs.org"
+val shellPagePath = "mobile-html-shell"
+val loadCompletion = "() => { marshaller.onReceiveMessage('{\"action\": \"load_complete\"}'); }"
+val setupParams = "{platform: pagelib.c1.Platforms.ANDROID, theme: pagelib.c1.Themes.DARK, dimImages: false, margins: { top: '16px', right: '16px', bottom: '16px', left: '16px' }, areTablesInitiallyExpanded: false}"
 
 class Client: WebViewClient() {
     var incomingMessageHandler: ValueCallback<String>? = null
@@ -58,6 +58,7 @@ class MainActivity : AppCompatActivity() {
     var client = Client()
     var startTime: Long = 0
     var endTime: Long = 0
+    var titleToLoadIntoShell: String? = null
 
     fun startTimer() {
         startTime = System.currentTimeMillis()
@@ -74,8 +75,15 @@ class MainActivity : AppCompatActivity() {
         webView.settings.javaScriptEnabled = true
         client.incomingMessageHandler = ValueCallback<String> {
             runOnUiThread {
-                endTimer()
-                webView.isVisible = true
+                val title = titleToLoadIntoShell
+                titleToLoadIntoShell = null
+                if (title != null) {
+                    startTimer()
+                    client.loadTitle(title, webView)
+                } else {
+                    endTimer()
+                    webView.isVisible = true
+                }
             }
 //            try {
 //                val messagePack = JSONObject(it)
@@ -88,20 +96,17 @@ class MainActivity : AppCompatActivity() {
         webView.addJavascriptInterface(client, "marshaller")
         loadButton.setOnClickListener {
             if (!webView.url.contains(shellPagePath)) {
-                timeTextView.text = "load shell first"
+                titleToLoadIntoShell = titleEditText.text.toString()
+                loadShell()
             } else {
                 startTimer()
                 client.loadTitle(titleEditText.text.toString(), webView)
             }
-
         }
         fullLoadButton.setOnClickListener {
             webView.isVisible = false
             startTimer()
             client.fullyLoadTitle(titleEditText.text.toString(), webView)
-        }
-        shellButton.setOnClickListener {
-            loadShell()
         }
         loadShell()
     }

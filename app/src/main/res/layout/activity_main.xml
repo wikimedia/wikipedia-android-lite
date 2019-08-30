@@ -14,8 +14,9 @@
 
         <EditText
             android:id="@+id/titleEditText"
-            android:layout_width="162dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_weight="10"
             android:ems="10"
             android:inputType="textPersonName"
             android:text="Dog" />
@@ -24,8 +25,9 @@
             android:id="@+id/loadButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:backgroundTint="@color/colorAccent"
-            android:text="Load" />
+            android:text="Shell" />
 
         <Button
             android:id="@+id/fullLoadButton"
@@ -35,14 +37,6 @@
             android:backgroundTint="@color/colorAccent"
             android:text="Full" />
 
-        <Button
-            android:id="@+id/shellButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:backgroundTint="@color/colorAccent"
-            android:text="Shell" />
-
     </LinearLayout>
 
     <TextView
@@ -50,6 +44,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="0.01"
+        android:padding="5dp"
         android:text="0" />
 
     <WebView
