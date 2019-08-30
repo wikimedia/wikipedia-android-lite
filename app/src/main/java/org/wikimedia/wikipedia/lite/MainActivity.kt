@@ -32,10 +32,7 @@ class Client: WebViewClient() {
         super.onPageStarted(view, url, favicon)
     }
     fun loadFirstSectionOfTitle(title: String, webView: WebView) {
-        var js = "pagelib.c1.Page.loadFirstSection('https://en.wikipedia.org/api/rest_v1/page/mobile-html/${title}').then(() => { " +
-                "window.requestAnimationFrame(${loadCompletion});\n" +
-                "pagelib.c1.Page.setup(${setupParams});\n" +
-                "}); " // load complete here because the page is visible
+        var js = "pagelib.c1.Page.loadProgressively('https://en.wikipedia.org/api/rest_v1/page/mobile-html/${title}', 100, ${loadCompletion}, () => {  pagelib.c1.Page.setup(${setupParams}) }); "
 
         webView.evaluateJavascript(js,
             ValueCallback<String> {
