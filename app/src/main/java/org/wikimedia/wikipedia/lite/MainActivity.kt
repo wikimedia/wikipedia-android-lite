@@ -8,6 +8,7 @@ import android.webkit.JavascriptInterface
 import android.webkit.ValueCallback
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.core.view.isVisible
 import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONException
 import org.json.JSONObject
@@ -72,7 +73,10 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         webView.settings.javaScriptEnabled = true
         client.incomingMessageHandler = ValueCallback<String> {
-            endTimer()
+            runOnUiThread {
+                endTimer()
+                webView.isVisible = true
+            }
 //            try {
 //                val messagePack = JSONObject(it)
 //                var action = messagePack.get("action")
@@ -92,6 +96,7 @@ class MainActivity : AppCompatActivity() {
 
         }
         fullLoadButton.setOnClickListener {
+            webView.isVisible = false
             startTimer()
             client.fullyLoadTitle(titleEditText.text.toString(), webView)
         }
