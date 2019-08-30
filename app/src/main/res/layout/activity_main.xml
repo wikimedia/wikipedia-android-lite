@@ -19,7 +19,7 @@
             android:layout_weight="10"
             android:ems="10"
             android:inputType="textPersonName"
-            android:text="Dog" />
+            android:text="United_States" />
 
         <Button
             android:id="@+id/loadButton"
@@ -28,6 +28,14 @@
             android:layout_weight="1"
             android:backgroundTint="@color/colorAccent"
             android:text="Shell" />
+
+        <Button
+            android:id="@+id/firstButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:backgroundTint="@color/colorAccent"
+            android:text="FIRST" />
 
         <Button
             android:id="@+id/fullLoadButton"

@@ -31,7 +31,17 @@ class Client: WebViewClient() {
     override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
         super.onPageStarted(view, url, favicon)
     }
+    fun loadFirstSectionOfTitle(title: String, webView: WebView) {
+        var js = "pagelib.c1.Page.loadFirstSection('https://en.wikipedia.org/api/rest_v1/page/mobile-html/${title}').then(() => { " +
+                "window.requestAnimationFrame(${loadCompletion});\n" +
+                "pagelib.c1.Page.setup(${setupParams});\n" +
+                "}); " // load complete here because the page is visible
 
+        webView.evaluateJavascript(js,
+            ValueCallback<String> {
+
+            })
+    }
     fun loadTitle(title: String, webView: WebView) {
         var js = "pagelib.c1.Page.load('https://en.wikipedia.org/api/rest_v1/page/mobile-html/${title}').then(() => { " +
                     "window.requestAnimationFrame(${loadCompletion});\n" +
@@ -59,6 +69,7 @@ class MainActivity : AppCompatActivity() {
     var startTime: Long = 0
     var endTime: Long = 0
     var titleToLoadIntoShell: String? = null
+    var loadFirstSection: Boolean = false
 
     fun startTimer() {
         startTime = System.currentTimeMillis()
@@ -79,7 +90,11 @@ class MainActivity : AppCompatActivity() {
                 titleToLoadIntoShell = null
                 if (title != null) {
                     startTimer()
-                    client.loadTitle(title, webView)
+                    if (loadFirstSection) {
+                        client.loadFirstSectionOfTitle(title, webView)
+                    } else {
+                        client.loadTitle(title, webView)
+                    }
                 } else {
                     endTimer()
                     webView.isVisible = true
@@ -96,6 +111,7 @@ class MainActivity : AppCompatActivity() {
         webView.addJavascriptInterface(client, "marshaller")
         loadButton.setOnClickListener {
             if (!webView.url.contains(shellPagePath)) {
+                loadFirstSection = true
                 titleToLoadIntoShell = titleEditText.text.toString()
                 loadShell()
             } else {
@@ -107,6 +123,16 @@ class MainActivity : AppCompatActivity() {
             webView.isVisible = false
             startTimer()
             client.fullyLoadTitle(titleEditText.text.toString(), webView)
+        }
+        firstButton.setOnClickListener {
+            startTimer()
+            if (!webView.url.contains(shellPagePath)) {
+                titleToLoadIntoShell = titleEditText.text.toString()
+                loadShell()
+            } else {
+                startTimer()
+                client.loadFirstSectionOfTitle(titleEditText.text.toString(), webView)
+            }
         }
         loadShell()
     }
