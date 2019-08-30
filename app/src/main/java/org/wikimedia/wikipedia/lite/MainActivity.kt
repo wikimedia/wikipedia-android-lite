@@ -14,23 +14,14 @@ import org.json.JSONObject
 
 var shellPageHost = "talk-pages.wmflabs.org"
 var shellPagePath = "mobile-html-shell"
+var loadCompletion = "() => { marshaller.onReceiveMessage('{\"action\": \"load_complete\"}'); }"
+var setupParams = "{platform: pagelib.c1.Platforms.ANDROID, theme: pagelib.c1.Themes.DARK, dimImages: false, margins: { top: '16px', right: '16px', bottom: '16px', left: '16px' }, areTablesInitiallyExpanded: false}"
 
 class Client: WebViewClient() {
     var incomingMessageHandler: ValueCallback<String>? = null
     override fun onPageFinished(view: WebView?, url: String?) {
         super.onPageFinished(view, url)
-        view?.evaluateJavascript("pagelib.c1.Page.setup({" +
-                "platform: pagelib.c1.Platforms.ANDROID," +
-                "clientVersion: '0.0.0'," +
-                "theme: pagelib.c1.Themes.DARK," +
-                "dimImages: false," +
-                "margins: { top: '16px', right: '16px', bottom: '16px', left: '16px' }," +
-                "areTablesInitiallyExpanded: false," +
-                "textSizeAdjustmentPercentage: '100%%'," +
-                "loadImages: true" +
-                "}," +
-                "() => { marshaller.onReceiveMessage('{\"action\": \"load_complete\"}') }" +
-                ")",
+        view?.evaluateJavascript("pagelib.c1.Page.setup(${setupParams}, ${loadCompletion});",
             ValueCallback<String> {
 
             })
@@ -42,19 +33,10 @@ class Client: WebViewClient() {
 
     fun loadTitle(title: String, webView: WebView) {
         var js = "pagelib.c1.Page.load('https://en.wikipedia.org/api/rest_v1/page/mobile-html/${title}').then(() => { " +
-                "pagelib.c1.Page.setup({" +
-                "platform: pagelib.c1.Platforms.ANDROID," +
-                "clientVersion: '0.0.0'," +
-                "theme: pagelib.c1.Themes.DARK," +
-                "dimImages: false," +
-                "margins: { top: '16px', right: '16px', bottom: '16px', left: '16px' }," +
-                "areTablesInitiallyExpanded: false," +
-                "textSizeAdjustmentPercentage: '100%%'," +
-                "loadImages: true" +
-                "}," +
-                "() => { marshaller.onReceiveMessage('{\"action\": \"load_complete\"}') }" +
-                ")" +
-                "} )"
+                    "window.requestAnimationFrame(${loadCompletion});\n" +
+                    "pagelib.c1.Page.setup(${setupParams});\n" +
+                "}); " // load complete here because the page is visible
+
         webView.evaluateJavascript(js,
             ValueCallback<String> {
 
