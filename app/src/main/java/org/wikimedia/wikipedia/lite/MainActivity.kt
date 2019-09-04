@@ -15,21 +15,22 @@ import org.json.JSONObject
 
 val shellPageHost = "talk-pages.wmflabs.org"
 val shellPagePath = "mobile-html-shell"
-val loadCompletion = "() => { setTimeout(() => { marshaller.onReceiveMessage('{\"action\": \"load_complete\"}'); }, 1) }"
-val setupParams = "{platform: pagelib.c1.Platforms.ANDROID, theme: pagelib.c1.Themes.DARK, dimImages: false, margins: { top: '16px', right: '16px', bottom: '16px', left: '16px' }, areTablesInitiallyExpanded: false}"
+val loadCompletion = "() => { setTimeout(() => { pcsClient.onReceiveMessage('{\"action\": \"setup\"}'); }, 1) }"
+val setupParams = "{theme: 'pagelib_theme_dark', dimImages: false, loadImages: false, margins: { top: '16px', right: '16px', bottom: '16px', left: '16px' }, areTablesInitiallyExpanded: false}"
+val setupParamsJSON = "{\"theme\": \"pagelib_theme_dark\", \"dimImages\": false, \"loadImages\": false, \"margins\": { \"top\": \"16px\", \"right\": \"16px\", \"bottom\": \"16px\", \"left\": \"16px\" }, \"areTablesInitiallyExpanded\": false}"
+val localBaseURL = "http://192.168.1.26:6927"
 
 class Client: WebViewClient() {
     var incomingMessageHandler: ValueCallback<String>? = null
     override fun onPageFinished(view: WebView?, url: String?) {
         super.onPageFinished(view, url)
-        view?.evaluateJavascript("pagelib.c1.Page.setup(${setupParams}, ${loadCompletion});",
-            ValueCallback<String> {
+        if (url != null && url.contains(shellPagePath)) {
+            view?.evaluateJavascript("pagelib.c1.Page.setup(${setupParams}, ${loadCompletion});",
+                ValueCallback<String> {
 
-            })
-    }
+                })
+        }
 
-    override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-        super.onPageStarted(view, url, favicon)
     }
     fun loadFirstSectionOfTitle(title: String, webView: WebView) {
         var js = "pagelib.c1.Page.loadProgressively('https://en.wikipedia.org/api/rest_v1/page/mobile-html/${title}', 100, ${loadCompletion}, () => {  pagelib.c1.Page.setup(${setupParams}) }); "
@@ -52,12 +53,18 @@ class Client: WebViewClient() {
     }
 
     fun fullyLoadTitle(title: String, webView: WebView) {
-        webView.loadUrl("https://en.wikipedia.org/api/rest_v1/page/mobile-html/${title}")
+        //webView.loadUrl("https://en.wikipedia.org/api/rest_v1/page/mobile-html/${title}")
+        webView.loadUrl("${localBaseURL}/en.wikipedia.org/v1/page/mobile-html/${title}")
     }
 
     @JavascriptInterface
     fun onReceiveMessage(message: String) {
         incomingMessageHandler?.onReceiveValue(message)
+    }
+
+    @JavascriptInterface
+    fun getSetupSettings(): String {
+        return setupParamsJSON
     }
 }
 
@@ -83,30 +90,34 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         webView.settings.javaScriptEnabled = true
         client.incomingMessageHandler = ValueCallback<String> {
-            runOnUiThread {
-                val title = titleToLoadIntoShell
-                titleToLoadIntoShell = null
-                if (title != null) {
-                    startTimer()
-                    if (loadFirstSection) {
-                        client.loadFirstSectionOfTitle(title, webView)
-                    } else {
-                        client.loadTitle(title, webView)
+            try {
+                val messagePack = JSONObject(it)
+                var action = messagePack.get("action")
+                if (action == "setup") {
+                    runOnUiThread {
+                        val title = titleToLoadIntoShell
+                        titleToLoadIntoShell = null
+                        if (title != null) {
+                            startTimer()
+                            if (loadFirstSection) {
+                                client.loadFirstSectionOfTitle(title, webView)
+                            } else {
+                                client.loadTitle(title, webView)
+                            }
+                        } else {
+                            endTimer()
+                            webView.isVisible = true
+                        }
                     }
-                } else {
-                    endTimer()
-                    webView.isVisible = true
                 }
+            } catch (e: JSONException) {
+                throw RuntimeException(e)
             }
-//            try {
-//                val messagePack = JSONObject(it)
-//                var action = messagePack.get("action")
-//            } catch (e: JSONException) {
-//                throw RuntimeException(e)
-//            }
+
+
         }
         webView.webViewClient = client
-        webView.addJavascriptInterface(client, "marshaller")
+        webView.addJavascriptInterface(client, "pcsClient")
         loadButton.setOnClickListener {
             if (!webView.url.contains(shellPagePath)) {
                 loadFirstSection = true
