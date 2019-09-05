@@ -109,6 +109,16 @@ class MainActivity : AppCompatActivity() {
                             webView.isVisible = true
                         }
                     }
+                } else if (action == "link_clicked") {
+                    val data = messagePack.get("data") as JSONObject
+                    val href = data.get("href") as String
+                    var path = href.replace("./", "")
+                    runOnUiThread {
+                        val url = webView.url
+                        val newURL = url.replaceAfterLast("/", path)
+                        startTimer()
+                        webView.loadUrl(newURL)
+                    }
                 }
             } catch (e: JSONException) {
                 throw RuntimeException(e)
