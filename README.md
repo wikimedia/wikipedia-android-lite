@@ -15,4 +15,4 @@ Loads the page into the `mobile-html-shell` page and measures the time between c
 Loads the first section of the page into the `mobile-html-shell` page and measures the time between calling `pagelib.c1.Page.loadProgressively(` and the page rendering the first section. This is still loading the full content but only appending the first section immediately. The rest of the content is added after a 100ms delay. For longer articles, the time to first paint is noticeably faster on device with this approach when compared to appending the whole article at once.
 
 ### Full
-Loads the full `mobile-html` page, waits for it to finish loading, then calls `pagelib.c1.Page.setup(`. Measures the time from before the request is kicked off until after the setup completion is called.
+Loads the full `mobile-html` page using the split prototype from `apps.wmflabs.org` https://gerrit.wikimedia.org/r/c/mediawiki/services/mobileapps/+/534531. Measures the time between sending the network request and the `{action: 'setup'}` callback from pagelib.
