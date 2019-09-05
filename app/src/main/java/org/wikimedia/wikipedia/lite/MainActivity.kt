@@ -16,9 +16,9 @@ import org.json.JSONObject
 val shellPageHost = "talk-pages.wmflabs.org"
 val shellPagePath = "mobile-html-shell"
 val loadCompletion = "() => { setTimeout(() => { pcsClient.onReceiveMessage('{\"action\": \"setup\"}'); }, 1) }"
-val setupParams = "{theme: 'pagelib_theme_dark', dimImages: false, loadImages: false, margins: { top: '16px', right: '16px', bottom: '16px', left: '16px' }, areTablesInitiallyExpanded: false}"
-val setupParamsJSON = "{\"theme\": \"pagelib_theme_dark\", \"dimImages\": false, \"loadImages\": false, \"margins\": { \"top\": \"16px\", \"right\": \"16px\", \"bottom\": \"16px\", \"left\": \"16px\" }, \"areTablesInitiallyExpanded\": false}"
-val localBaseURL = "http://192.168.1.26:6927"
+val setupParams = "{theme: 'pagelib_theme_dark', dimImages: false, loadImages: true, margins: { top: '16px', right: '16px', bottom: '16px', left: '16px' }, areTablesInitiallyExpanded: false}"
+val setupParamsJSON = "{\"theme\": \"pagelib_theme_dark\", \"dimImages\": false, \"loadImages\": true, \"margins\": { \"top\": \"16px\", \"right\": \"16px\", \"bottom\": \"16px\", \"left\": \"16px\" }, \"areTablesInitiallyExpanded\": false}"
+val fullPageBaseURL = "https://apps.wmflabs.org/en.wikipedia.org/v1/page/mobile-html/"
 
 class Client: WebViewClient() {
     var incomingMessageHandler: ValueCallback<String>? = null
@@ -54,7 +54,7 @@ class Client: WebViewClient() {
 
     fun fullyLoadTitle(title: String, webView: WebView) {
         //webView.loadUrl("https://en.wikipedia.org/api/rest_v1/page/mobile-html/${title}")
-        webView.loadUrl("${localBaseURL}/en.wikipedia.org/v1/page/mobile-html/${title}")
+        webView.loadUrl("${fullPageBaseURL}${title}")
     }
 
     @JavascriptInterface
@@ -116,6 +116,7 @@ class MainActivity : AppCompatActivity() {
 
 
         }
+        webView.clearCache(true)
         webView.webViewClient = client
         webView.addJavascriptInterface(client, "pcsClient")
         loadButton.setOnClickListener {
