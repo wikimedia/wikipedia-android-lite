@@ -17,7 +17,7 @@ val interactionHandler = "(action) => { pcsClient.onReceiveMessage(JSON.stringif
 val loadCompletion = "() => { setTimeout(() => { pcsClient.onReceiveMessage('{\"action\": \"setup\"}'); }, 1) }"
 val setupParams = "{theme: 'pagelib_theme_dark', dimImages: false, loadImages: true, margins: { top: '16px', right: '16px', bottom: '16px', left: '16px' }, areTablesInitiallyExpanded: false}"
 val setupParamsJSON = "{\"theme\": \"pagelib_theme_dark\", \"dimImages\": false, \"loadImages\": true, \"margins\": { \"top\": \"16px\", \"right\": \"16px\", \"bottom\": \"16px\", \"left\": \"16px\" }, \"areTablesInitiallyExpanded\": false}"
-val fullPageBaseURL = "https://apps.wmflabs.org/en.wikipedia.org/v1/page/mobile-html/"
+val fullPageBaseURL = "https://en.wikipedia.org/api/rest_v1/page/mobile-html/"
 
 class Client: WebViewClient() {
     var incomingMessageHandler: ValueCallback<String>? = null
@@ -28,8 +28,8 @@ class Client: WebViewClient() {
         onPageFinishedHandler?.onReceiveValue(url)
     }
 
-    fun loadFirstSectionOfTitle(title: String, webView: WebView) {
-        var js = "pagelib.c1.Page.loadProgressively('https://en.wikipedia.org/api/rest_v1/page/mobile-html/${title}', 100, ${loadCompletion}, () => {  pagelib.c1.Page.setup(${setupParams}) }); "
+    fun progressivelyLoadIntoshell(url: String, webView: WebView) {
+        var js = "pagelib.c1.Page.loadProgressively('${url}', 100, ${loadCompletion}, () => {  pagelib.c1.Page.setup(${setupParams}) }); "
 
         webView.evaluateJavascript(js,
             ValueCallback<String> {
@@ -37,8 +37,8 @@ class Client: WebViewClient() {
             })
     }
 
-    fun loadTitle(title: String, webView: WebView) {
-        var js = "pagelib.c1.Page.load('https://en.wikipedia.org/api/rest_v1/page/mobile-html/${title}').then(() => { " +
+    fun loadIntoShell(url: String, webView: WebView) {
+        var js = "pagelib.c1.Page.load('${url}').then(() => { " +
                     "window.requestAnimationFrame(${loadCompletion});\n" +
                     "pagelib.c1.Page.setup(${setupParams});\n" +
                 "}); " // load complete here because the page is visible
@@ -49,9 +49,8 @@ class Client: WebViewClient() {
             })
     }
 
-    fun fullyLoadTitle(title: String, webView: WebView) {
-        //webView.loadUrl("https://en.wikipedia.org/api/rest_v1/page/mobile-html/${title}")
-        webView.loadUrl("${fullPageBaseURL}${title}")
+    fun navigateTo(url: String, webView: WebView) {
+        webView.loadUrl("${url}")
     }
 
     @JavascriptInterface
@@ -81,10 +80,11 @@ class MainActivity : AppCompatActivity() {
     var endTime: Long = 0
 
     var currentPageTitle = "United_States"
+    var currentPageURL = ""
     var type = PageLoadType.SHELL
     var mode = PageLoadMode.FULL
     var shellPageLoadState = ShellPageLoadState.NONE
-    val loadedTitles: MutableMap<PageLoadType, MutableSet<String>> = mutableMapOf()
+    val loadedURLs:  MutableSet<String> = mutableSetOf()
 
     fun startTimer() {
         timeTextView.text = ""
@@ -92,10 +92,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun endTimer() {
-        var titles = loadedTitles.getOrPut(type, ::mutableSetOf)
         val text: String
-        if (!titles.contains(currentPageTitle)) {
-            titles.add(currentPageTitle)
+        if (!loadedURLs.contains(currentPageURL)) {
+            loadedURLs.add(currentPageURL)
             text = "uncached"
         } else {
             text = "cached"
@@ -138,9 +137,9 @@ class MainActivity : AppCompatActivity() {
                             shellPageLoadState = ShellPageLoadState.SETUP
                             startTimer()
                             if (mode == PageLoadMode.PROGRESSIVE) {
-                                client.loadFirstSectionOfTitle(currentPageTitle, webView)
+                                client.progressivelyLoadIntoshell(currentPageURL, webView)
                             } else {
-                                client.loadTitle(currentPageTitle, webView)
+                                client.progressivelyLoadIntoshell(currentPageURL, webView)
                             }
                         } else {
                             endTimer()
@@ -154,13 +153,14 @@ class MainActivity : AppCompatActivity() {
                     var path = href.replace("./", "")
                     runOnUiThread {
                         currentPageTitle = path
+                        currentPageURL = "${fullPageBaseURL}${currentPageTitle}"
                         if (type == PageLoadType.SHELL) {
                             if (mode == PageLoadMode.PROGRESSIVE) {
                                 startTimer()
-                                client.loadFirstSectionOfTitle(path, webView)
+                                client.progressivelyLoadIntoshell(currentPageURL, webView)
                             } else if (mode == PageLoadMode.FULL) {
                                 startTimer()
-                                client.loadTitle(path, webView)
+                                client.loadIntoShell(currentPageURL, webView)
                             }
                         } else {
                             val url = webView.url
@@ -182,37 +182,39 @@ class MainActivity : AppCompatActivity() {
             mode = PageLoadMode.FULL
             setUIEnabled(false)
             currentPageTitle = titleEditText.text.toString()
+            currentPageURL = "${fullPageBaseURL}${currentPageTitle}"
             if (shellPageLoadState != ShellPageLoadState.SETUP) {
                 loadShell()
             } else {
                 startTimer()
-                client.loadTitle(titleEditText.text.toString(), webView)
+                client.loadIntoShell(currentPageURL, webView)
             }
         }
         fullLoadButton.setOnClickListener {
             type = PageLoadType.STANDARD
             mode = PageLoadMode.PROGRESSIVE
             currentPageTitle = titleEditText.text.toString()
+            currentPageURL = "${fullPageBaseURL}${currentPageTitle}"
             shellPageLoadState = ShellPageLoadState.NONE
             setUIEnabled(false)
             webView.isVisible = false
             startTimer()
-            client.fullyLoadTitle(currentPageTitle, webView)
+            client.navigateTo(currentPageURL, webView)
         }
         firstButton.setOnClickListener {
             type = PageLoadType.SHELL
             mode = PageLoadMode.PROGRESSIVE
             currentPageTitle = titleEditText.text.toString()
+            currentPageURL = "${fullPageBaseURL}${currentPageTitle}"
             setUIEnabled(false)
             startTimer()
             if (shellPageLoadState != ShellPageLoadState.SETUP) {
                 loadShell()
             } else {
                 startTimer()
-                client.loadFirstSectionOfTitle(currentPageTitle, webView)
+                client.progressivelyLoadIntoshell(currentPageURL, webView)
             }
         }
-        loadShell()
     }
 
     fun loadShell() {
